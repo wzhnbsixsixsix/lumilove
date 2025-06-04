@@ -22,8 +22,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/verify").permitAll() // 确保这一行存在且位置正确
+                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/api/user/profile").authenticated()  // 明确指定PUT方法
                 .requestMatchers(HttpMethod.GET, "/api/user/profile").authenticated()  // 明确指定GET方法
                 .anyRequest().authenticated()
@@ -37,4 +38,6 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+
 } 

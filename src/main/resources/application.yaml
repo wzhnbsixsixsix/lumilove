@@ -28,20 +28,18 @@ spring:
 
 logging:
   level:
-    com.ssai.lumilovebackend: debug
-    # 修改Hibernate SQL日志格式
+    root: INFO
+    com.ssai.lumilovebackend: DEBUG
+    com.ssai.lumilovebackend.security: TRACE
+    com.ssai.lumilovebackend.utils.JwtUtil: TRACE
+    org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
-    # 关闭参数绑定日志
     org.hibernate.type.descriptor.sql.BasicBinder: OFF
-    # 使用更简洁的JPA日志
     org.springframework.data.jpa: DEBUG
-    # 添加以下配置来使用更简洁的日志格式
     org.hibernate.type.descriptor.sql: OFF
-    # 关闭Hibernate统计信息
     org.hibernate.stat: OFF
-    # 关闭Hibernate SQL格式化
     org.hibernate.engine.transaction.internal.TransactionImpl: OFF
 
 jwt:
-  secret: "deadbeefcafebabe112233445566778899aabbccddeeff001122334455667788"
   expiration: 86400  # 24小时，单位为秒
+  refresh-expiration: 604800  # 7天，单位为秒

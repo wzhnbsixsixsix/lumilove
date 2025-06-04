@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -81,13 +83,83 @@ Content-Type: application/json
                     .body(Collections.singletonMap("message", "email or password error"));
         }
 
-        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
+        String accessToken = jwtUtil.generateToken(user.getId(), user.getEmail());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
+        
         LoginResponse.UserDto userDto = new LoginResponse.UserDto(
             user.getId(),
             user.getUsername(),
             user.getEmail()
         );
 
-        return ResponseEntity.ok(new LoginResponse(token, userDto));
+        Map<String, Object> response = new HashMap<>();
+        response.put("accessToken", accessToken);
+        response.put("refreshToken", refreshToken);
+        response.put("user", userDto);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "Invalid refresh token"));
+        }
+
+        String refreshToken = authHeader.substring(7);
+        
+        if (!jwtUtil.validateRefreshToken(refreshToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "Invalid or expired refresh token"));
+        }
+
+        String email = jwtUtil.getEmailFromToken(refreshToken);
+        User user = userService.findByEmail(email);
+        
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "User not found"));
+        }
+
+        String newAccessToken = jwtUtil.generateToken(user.getId(), user.getEmail());
+        String newRefreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getEmail());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("accessToken", newAccessToken);
+        response.put("refreshToken", newRefreshToken);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<?> verifyToken(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "No token provided"));
+        }
+
+        String token = authHeader.substring(7);
+        
+        if (!jwtUtil.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "Invalid or expired token"));
+        }
+
+        String email = jwtUtil.getEmailFromToken(token);
+        User user = userService.findByEmail(email);
+        
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("message", "User not found"));
+        }
+
+        LoginResponse.UserDto userDto = new LoginResponse.UserDto(
+            user.getId(),
+            user.getUsername(),
+            user.getEmail()
+        );
+
+        return ResponseEntity.ok(userDto);
     }
 }
