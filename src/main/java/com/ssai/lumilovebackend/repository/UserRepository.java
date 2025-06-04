@@ -17,4 +17,6 @@ count()：统计数量
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByEmail(String email);
+    User findByUsername(String username);
+
 } 

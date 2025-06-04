@@ -43,10 +43,5 @@ logging:
     org.hibernate.engine.transaction.internal.TransactionImpl: OFF
 
 jwt:
-  expiration: 86400  # 24小时
-openrouter:
-  api:
-    key: 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
-
-
-
+  secret: "deadbeefcafebabe112233445566778899aabbccddeeff001122334455667788"
+  expiration: 86400  # 24小时，单位为秒

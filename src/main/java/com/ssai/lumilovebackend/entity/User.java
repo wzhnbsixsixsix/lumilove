@@ -32,6 +32,9 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(length = 1000)
+    private String avatar;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
