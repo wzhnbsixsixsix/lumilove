@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: lumilovebackend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/lumilove?useSSL=false&serverTimezone=UTC
+    username: root
+    password: Szbawzh0902
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        # 添加以下配置来美化SQL输出
+        use_sql_comments: false  # 关闭SQL注释
+        # 自定义SQL格式化
+        format_sql_comment: false
+        # 使用更简洁的SQL日志格式
+        generate_statistics: false
+        # 关闭SQL参数绑定日志
+        type: trace
+        # 使用更简洁的SQL日志格式
+        use_identifier_rollback: true
+    database-platform: org.hibernate.dialect.MySQLDialect
+
+logging:
+  level:
+    com.ssai.lumilovebackend: debug
+    # 修改Hibernate SQL日志格式
+    org.hibernate.SQL: DEBUG
+    # 关闭参数绑定日志
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+    # 使用更简洁的JPA日志
+    org.springframework.data.jpa: DEBUG
+    # 添加以下配置来使用更简洁的日志格式
+    org.hibernate.type.descriptor.sql: OFF
+    # 关闭Hibernate统计信息
+    org.hibernate.stat: OFF
+    # 关闭Hibernate SQL格式化
+    org.hibernate.engine.transaction.internal.TransactionImpl: OFF
+
+jwt:
+  expiration: 86400  # 24小时
+openrouter:
+  api:
+    key: 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
+
+
+
