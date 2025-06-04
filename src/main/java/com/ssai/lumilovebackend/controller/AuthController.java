@@ -89,7 +89,8 @@ Content-Type: application/json
         LoginResponse.UserDto userDto = new LoginResponse.UserDto(
             user.getId(),
             user.getUsername(),
-            user.getEmail()
+            user.getEmail(),
+            user.getAvatar()
         );
 
         Map<String, Object> response = new HashMap<>();
@@ -157,7 +158,8 @@ Content-Type: application/json
         LoginResponse.UserDto userDto = new LoginResponse.UserDto(
             user.getId(),
             user.getUsername(),
-            user.getEmail()
+            user.getEmail(),
+            user.getAvatar()
         );
 
         return ResponseEntity.ok(userDto);
