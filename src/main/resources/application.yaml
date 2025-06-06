@@ -43,3 +43,18 @@ logging:
 jwt:
   expiration: 86400  # 24小时，单位为秒
   refresh-expiration: 604800  # 7天，单位为秒
+
+
+openrouter:
+  api:
+    key: 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
+    url: https://openrouter.ai/api/v1/chat/completions
+    name: openai/gpt-4
+
+resilience4j:
+  ratelimiter:
+    instances:
+      openRouterRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0s
