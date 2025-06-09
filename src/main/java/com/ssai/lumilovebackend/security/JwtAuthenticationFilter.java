@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod; // Import HttpMethod
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,23 +39,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.equals("/api/auth/login") || 
-               path.equals("/api/auth/register") || 
-               path.equals("/api/auth/refresh");
+        // 添加条件：如果是 OPTIONS 请求且路径以 /api/ 开头，则不进行过滤
+        if (HttpMethod.OPTIONS.matches(request.getMethod()) && path.startsWith("/api/")) {
+            return true;
+        }
+        return path.equals("/api/auth/login") ||
+                path.equals("/api/auth/register") ||
+                path.equals("/api/auth/refresh");
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, 
-                                  HttpServletResponse response, 
-                                  FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
 
         // 清除之前的认证信息
         SecurityContextHolder.clearContext();
-        
+
         final String authHeader = request.getHeader("Authorization");
         logger.debug("Processing request to: {}", request.getRequestURI());
-        
+
+        // 注意：这里的逻辑只会在 shouldNotFilter 返回 false 时执行
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             logger.debug("No Bearer token found in request");
             handleAuthenticationError(response, "No token provided");
@@ -64,23 +70,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             final String jwt = authHeader.substring(7);
             logger.debug("Extracted JWT token: {}", jwt);
-            
+
             // 先验证token
             if (!jwtUtil.validateToken(jwt)) {
                 logger.warn("JWT token validation failed");
                 handleAuthenticationError(response, "Token has expired or is invalid");
                 return;
             }
-            
+
             final String userEmail = jwtUtil.getEmailFromToken(jwt);
             logger.debug("Extracted user email from token: {}", userEmail);
 
             if (userEmail != null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
                 logger.debug("Loaded user details for email: {}", userEmail);
-                
+
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
+                        userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 logger.debug("Authentication set in SecurityContext");
@@ -98,13 +104,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void handleAuthenticationError(HttpServletResponse response, String message) throws IOException {
         // 确保清除认证信息
         SecurityContextHolder.clearContext();
-        
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        
+
         Map<String, String> error = new HashMap<>();
         error.put("message", message);
-        
+
         response.getWriter().write(objectMapper.writeValueAsString(error));
     }
-} 
+}

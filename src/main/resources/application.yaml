@@ -47,7 +47,7 @@ jwt:
 
 openrouter:
   api:
-    key: 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
+    key: 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
     url: https://openrouter.ai/api/v1/chat/completions
     name: openai/gpt-4
 

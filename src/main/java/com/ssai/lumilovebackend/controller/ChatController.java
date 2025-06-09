@@ -17,7 +17,8 @@ import java.util.Collections;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+// 移除 @CrossOrigin 注解
+// @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ChatController {
 
     private final OpenRouterService openRouterService;
