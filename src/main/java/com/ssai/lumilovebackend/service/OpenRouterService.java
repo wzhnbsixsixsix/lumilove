@@ -18,6 +18,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class OpenRouterService {
 
     private final RestTemplate openRouterRestTemplate;
+    private final String openRouterModelName;
+
 
     @Value("${openrouter.api.url}")
     private String apiUrl;
@@ -25,6 +27,17 @@ public class OpenRouterService {
     @RateLimiter(name = "openRouterRateLimiter")
     public OpenRouterResponse chat(OpenRouterRequest request) {
         try {
+
+            // 确保请求使用配置的 model
+            if (request.getModel() == null) {
+                request = OpenRouterRequest.builder()
+                        .model(openRouterModelName)
+                        .messages(request.getMessages())
+                        .temperature(request.getTemperature())
+                        .maxTokens(request.getMaxTokens())
+                        .build();
+            }
+
             log.info("Sending request to OpenRouter API: {}", request);
             
             HttpEntity<OpenRouterRequest> entity = new HttpEntity<>(request);

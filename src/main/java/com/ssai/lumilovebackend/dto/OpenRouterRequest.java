@@ -1,21 +1,22 @@
 package com.ssai.lumilovebackend.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.List;
 
 @Data
 @Builder
-@NoArgsConstructor
+@RequiredArgsConstructor
 @AllArgsConstructor
 public class OpenRouterRequest {
-    @Builder.Default
-    private String model = "openai/gpt-4";
+
+    @JsonProperty("model")
+    private final String model;  // 使用 final 修饰
 
     private List<Message> messages;
+
 
     @Builder.Default
     private double temperature = 0.7;

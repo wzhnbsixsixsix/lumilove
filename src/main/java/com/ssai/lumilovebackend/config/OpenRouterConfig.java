@@ -24,6 +24,9 @@ public class OpenRouterConfig {
     @Value("${openrouter.api.name}")
     private String appName;
 
+    @Value("${openrouter.api.model}")
+    private String modelName;  // 添加这个字段
+
     @Bean
     public RestTemplate openRouterRestTemplate() {
         RestTemplate restTemplate = new RestTemplate();
@@ -50,5 +53,10 @@ public class OpenRouterConfig {
                 .build();
 
         return RateLimiterRegistry.of(config);
+    }
+
+    @Bean
+    public String openRouterModelName() {
+        return modelName;  // 修改这里，返回 modelName 而不是 appName
     }
 }

@@ -22,6 +22,7 @@ import java.util.Collections;
 public class ChatController {
 
     private final OpenRouterService openRouterService;
+    private final String openRouterModelName;
 
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@Valid @RequestBody ChatRequest request) {
@@ -30,7 +31,7 @@ public class ChatController {
 
             // 构建OpenRouter请求
             OpenRouterRequest openRouterRequest = OpenRouterRequest.builder()
-                    .model("openai/gpt-4")
+                    .model(openRouterModelName)
                     .messages(Collections.singletonList(
                             OpenRouterRequest.Message.builder()
                                     .role("user")
