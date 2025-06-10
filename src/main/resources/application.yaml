@@ -47,7 +47,7 @@ jwt:
 
 openrouter:
   api:
-    key: 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
+    key: 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
     url: https://openrouter.ai/api/v1/chat/completions
     name: Lumilove
     model: deepseek/deepseek-chat-v3-0324
@@ -79,6 +79,7 @@ openrouter:
     10. All actions must be visual and enhanced with onomatopoeia
     11. You are forbidden from being OOC (Out of Character)
     12. You must output in English only
+    13. Be colloquial, closely related to real people, and the answer length should be within 200 words
 
 resilience4j:
   ratelimiter:
