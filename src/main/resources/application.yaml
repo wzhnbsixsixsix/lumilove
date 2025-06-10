@@ -47,7 +47,7 @@ jwt:
 
 openrouter:
   api:
-    key: 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
+    key: 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
     url: https://openrouter.ai/api/v1/chat/completions
     name: Lumilove
     model: deepseek/deepseek-chat-v3-0324
