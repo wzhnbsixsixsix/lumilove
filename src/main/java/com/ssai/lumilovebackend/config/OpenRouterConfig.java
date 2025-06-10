@@ -25,7 +25,10 @@ public class OpenRouterConfig {
     private String appName;
 
     @Value("${openrouter.api.model}")
-    private String modelName;  // 添加这个字段
+    private String modelName; // 添加这个字段
+
+    @Value("${openrouter.system-prompt}")
+    private String systemPrompt;
 
     @Bean
     public RestTemplate openRouterRestTemplate() {
@@ -47,9 +50,9 @@ public class OpenRouterConfig {
     @Bean
     public RateLimiterRegistry rateLimiterRegistry() {
         RateLimiterConfig config = RateLimiterConfig.custom()
-                .limitForPeriod(10)  // 每秒最多10个请求
+                .limitForPeriod(10) // 每秒最多10个请求
                 .limitRefreshPeriod(Duration.ofSeconds(1))
-                .timeoutDuration(Duration.ZERO)  // 不等待，直接拒绝
+                .timeoutDuration(Duration.ZERO) // 不等待，直接拒绝
                 .build();
 
         return RateLimiterRegistry.of(config);
@@ -57,6 +60,6 @@ public class OpenRouterConfig {
 
     @Bean
     public String openRouterModelName() {
-        return modelName;  // 修改这里，返回 modelName 而不是 appName
+        return modelName; // 修改这里，返回 modelName 而不是 appName
     }
 }

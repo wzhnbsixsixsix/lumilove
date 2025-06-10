@@ -8,9 +8,11 @@ import com.ssai.lumilovebackend.service.OpenRouterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Slf4j
@@ -24,6 +26,9 @@ public class ChatController {
     private final OpenRouterService openRouterService;
     private final String openRouterModelName;
 
+    @Value("${openrouter.system-prompt}")
+    private String systemPrompt;
+
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@Valid @RequestBody ChatRequest request) {
         try {
@@ -32,7 +37,13 @@ public class ChatController {
             // 构建OpenRouter请求
             OpenRouterRequest openRouterRequest = OpenRouterRequest.builder()
                     .model(openRouterModelName)
-                    .messages(Collections.singletonList(
+                    .messages(Arrays.asList(
+                            // 添加系统提示词
+                            OpenRouterRequest.Message.builder()
+                                    .role("system")
+                                    .content(systemPrompt)
+                                    .build(),
+                            // 用户消息
                             OpenRouterRequest.Message.builder()
                                     .role("user")
                                     .content(request.getMessage())
