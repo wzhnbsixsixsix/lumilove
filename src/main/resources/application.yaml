@@ -1,14 +1,21 @@
 server:
-  port: 8080
-
+  port: 8443  # HTTPS端口
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: lumilove123
+    key-store-type: PKCS12
+    key-alias: lumilove
+  # HTTP端口8080会通过HttpsConfig配置类添加
+  
 spring:
   application:
     name: lumilovebackend
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/lumilove?useSSL=false&serverTimezone=UTC
-    username: root
-    password: Szbawzh0902
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://lumilovedb1.chwuqka62eu2.ap-southeast-2.rds.amazonaws.com:5432/Lumilovedb01
+    username: postgres
+    password: 12345678
   jpa:
     show-sql: true
     properties:
@@ -24,7 +31,10 @@ spring:
         type: trace
         # 使用更简洁的SQL日志格式
         use_identifier_rollback: true
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    # 添加PostgreSQL特定的JPA配置
+    hibernate:
+      ddl-auto: update  # 建议开发环境使用update，生产环境使用validate
 
 logging:
   level:
@@ -47,7 +57,7 @@ jwt:
 
 openrouter:
   api:
-    key: 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
+    key: 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
     url: https://openrouter.ai/api/v1/chat/completions
     name: Lumilove
     model: deepseek/deepseek-chat-v3-0324

@@ -53,17 +53,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-
         // 清除之前的认证信息
         SecurityContextHolder.clearContext();
 
         final String authHeader = request.getHeader("Authorization");
         logger.debug("Processing request to: {}", request.getRequestURI());
 
-        // 注意：这里的逻辑只会在 shouldNotFilter 返回 false 时执行
+        // 如果没有Authorization header，直接继续过滤链（让Spring Security处理）
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.debug("No Bearer token found in request");
-            handleAuthenticationError(response, "No token provided");
+            logger.debug("No Bearer token found in request, continuing filter chain");
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -90,7 +89,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 logger.debug("Authentication set in SecurityContext");
-                logger.debug("SecurityContextHolder after setting authentication: {}", SecurityContextHolder.getContext().getAuthentication());
             }
         } catch (Exception e) {
             logger.error("Error processing JWT token: {}", e.getMessage(), e);
