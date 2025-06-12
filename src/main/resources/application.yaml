@@ -1,5 +1,6 @@
 server:
   port: 8443  # HTTPS端口
+  address: 0.0.0.0  # 绑定到所有网络接口，允许外部访问
   ssl:
     enabled: true
     key-store: classpath:keystore.p12
@@ -57,7 +58,7 @@ jwt:
 
 openrouter:
   api:
-    key: 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
+    key: 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
     url: https://openrouter.ai/api/v1/chat/completions
     name: Lumilove
     model: deepseek/deepseek-chat-v3-0324
