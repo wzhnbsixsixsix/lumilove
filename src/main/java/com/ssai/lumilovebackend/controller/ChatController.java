@@ -9,9 +9,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -73,6 +76,55 @@ public class ChatController {
                             .success(false)
                             .error(e.getMessage())
                             .build());
+        }
+    }
+
+    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<StreamingResponseBody> chatStream(@Valid @RequestBody ChatRequest request) {
+        try {
+            log.info("Received streaming chat request: {}", request);
+
+            StreamingResponseBody stream = outputStream -> {
+                try {
+                    // 构建OpenRouter请求（启用流式）
+                    OpenRouterRequest openRouterRequest = OpenRouterRequest.builder()
+                            .model(openRouterModelName)
+                            .messages(Arrays.asList(
+                                    OpenRouterRequest.Message.builder()
+                                            .role("system")
+                                            .content(systemPrompt)
+                                            .build(),
+                                    OpenRouterRequest.Message.builder()
+                                            .role("user")
+                                            .content(request.getMessage())
+                                            .build()
+                            ))
+                            .temperature(0.7)
+                            .maxTokens(1000)
+                            .stream(true) // 启用流式
+                            .build();
+
+                    // 调用流式服务
+                    openRouterService.chatStream(openRouterRequest, outputStream);
+                } catch (Exception e) {
+                    log.error("Error in streaming chat", e);
+                    try {
+                        outputStream.write(("data: {\"error\": \"" + e.getMessage() + "\"}\n\n").getBytes());
+                        outputStream.flush();
+                    } catch (IOException ioException) {
+                        log.error("Error writing error message", ioException);
+                    }
+                }
+            };
+
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "no-cache")
+                    .header("Connection", "keep-alive")
+                    .body(stream);
+
+        } catch (Exception e) {
+            log.error("Error processing streaming chat request", e);
+            return ResponseEntity.badRequest().build();
         }
     }
 

@@ -25,6 +25,9 @@ public class OpenRouterRequest {
     @Builder.Default
     private int maxTokens = 1000;
 
+    @Builder.Default
+    private boolean stream = false;
+
     @Data
     @Builder
     @NoArgsConstructor
