@@ -4,11 +4,11 @@ import com.ssai.lumilovebackend.dto.ChatRequest;
 import com.ssai.lumilovebackend.dto.ChatResponse;
 import com.ssai.lumilovebackend.dto.OpenRouterRequest;
 import com.ssai.lumilovebackend.dto.OpenRouterResponse;
-import com.ssai.lumilovebackend.service.OpenRouterService;
+import com.ssai.lumilovebackend.service.impl.OpenRouterService;
+import com.ssai.lumilovebackend.service.impl.CharacterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 
 @Slf4j
 @RestController
@@ -27,26 +26,26 @@ import java.util.Collections;
 public class ChatController {
 
     private final OpenRouterService openRouterService;
+    private final CharacterService characterService;
     private final String openRouterModelName;
-
-    @Value("${openrouter.system-prompt}")
-    private String systemPrompt;
 
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@Valid @RequestBody ChatRequest request) {
         try {
             log.info("Received chat request: {}", request);
 
+            // 从数据库获取角色prompt
+            String characterPrompt = characterService.buildCharacterPrompt(request.getCharacterId());
+
             // 构建OpenRouter请求
             OpenRouterRequest openRouterRequest = OpenRouterRequest.builder()
                     .model(openRouterModelName)
                     .messages(Arrays.asList(
-                            // 添加系统提示词
+                            // 使用数据库中的prompt
                             OpenRouterRequest.Message.builder()
                                     .role("system")
-                                    .content(systemPrompt)
+                                    .content(characterPrompt)
                                     .build(),
-                            // 用户消息
                             OpenRouterRequest.Message.builder()
                                     .role("user")
                                     .content(request.getMessage())
@@ -62,7 +61,6 @@ public class ChatController {
             // 从响应中提取AI回复
             String aiMessage = response.getChoices().get(0).getMessage().getContent();
 
-            // 返回成功响应
             return ResponseEntity.ok(ChatResponse.builder()
                     .success(true)
                     .message(aiMessage)
@@ -70,7 +68,6 @@ public class ChatController {
 
         } catch (Exception e) {
             log.error("Error processing chat request", e);
-            // 返回错误响应
             return ResponseEntity.badRequest()
                     .body(ChatResponse.builder()
                             .success(false)
@@ -84,15 +81,43 @@ public class ChatController {
         try {
             log.info("Received streaming chat request: {}", request);
 
+            // 验证必要参数
+            if (request.getCharacterId() == null) {
+                log.error("Missing characterId in request: {}", request);
+                return ResponseEntity.badRequest().build();
+            }
+
+            // 从数据库获取角色prompt
+            String characterPrompt;
+            try {
+                characterPrompt = characterService.buildCharacterPrompt(request.getCharacterId());
+            } catch (Exception e) {
+                log.error("Failed to get character prompt for id: {}", request.getCharacterId(), e);
+                // 返回更详细的错误信息
+                StreamingResponseBody errorStream = outputStream -> {
+                    try {
+                        String errorMessage = String.format("{\"error\": \"角色ID %d 不存在或数据库查询失败: %s\"}", 
+                            request.getCharacterId(), e.getMessage());
+                        outputStream.write(("data: " + errorMessage + "\n\n").getBytes());
+                        outputStream.flush();
+                    } catch (IOException ioException) {
+                        log.error("Error writing error message", ioException);
+                    }
+                };
+                return ResponseEntity.ok()
+                        .header("Cache-Control", "no-cache")
+                        .header("Connection", "keep-alive")
+                        .body(errorStream);
+            }
+
             StreamingResponseBody stream = outputStream -> {
                 try {
-                    // 构建OpenRouter请求（启用流式）
                     OpenRouterRequest openRouterRequest = OpenRouterRequest.builder()
                             .model(openRouterModelName)
                             .messages(Arrays.asList(
                                     OpenRouterRequest.Message.builder()
                                             .role("system")
-                                            .content(systemPrompt)
+                                            .content(characterPrompt)
                                             .build(),
                                     OpenRouterRequest.Message.builder()
                                             .role("user")
@@ -101,10 +126,9 @@ public class ChatController {
                             ))
                             .temperature(0.7)
                             .maxTokens(1000)
-                            .stream(true) // 启用流式
+                            .stream(true)
                             .build();
 
-                    // 调用流式服务
                     openRouterService.chatStream(openRouterRequest, outputStream);
                 } catch (Exception e) {
                     log.error("Error in streaming chat", e);

@@ -1,4 +1,4 @@
-package com.ssai.lumilovebackend.service;
+package com.ssai.lumilovebackend.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

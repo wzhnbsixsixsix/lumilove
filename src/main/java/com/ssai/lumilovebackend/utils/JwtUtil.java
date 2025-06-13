@@ -55,9 +55,9 @@ public class JwtUtil {
         return token;
     }
 
-    private String createToken(Map<String, Object> claims, Long expirationTime) {
+    private String createToken(Map<String, Object> claims, Long validityInSeconds) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expirationTime * 1000);
+        Date expiryDate = new Date(now.getTime() + validityInSeconds * 1000);
         
         logger.trace("Creating token with claims: {}, expiration: {}", claims, expiryDate);
         
@@ -123,27 +123,32 @@ public class JwtUtil {
         return getClaimFromToken(token, claims -> claims.get("email", String.class));
     }
 
-    private <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claimsResolver.apply(claims);
     }
 
     private Claims getAllClaimsFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException e) {
+            logger.warn("JWT token is expired: {}", e.getMessage());
+            return e.getClaims(); // 即使过期，我们可能仍需要解析内容
+        }
     }
 
     private Boolean isTokenExpired(String token) {
-        final Date expiration = getExpirationDateFromToken(token);
-        boolean isExpired = expiration.before(new Date());
-        logger.trace("Token expiration check: {}, isExpired: {}", expiration, isExpired);
-        return isExpired;
+        final Date expirationDate = getExpirationDateFromToken(token);
+        return expirationDate.before(new Date());
     }
 
-    private Date getExpirationDateFromToken(String token) {
+    public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
+    }
+
+    // 新增一个更严格的验证方法
+    public Boolean validateToken(String token, String userEmail) {
+        final String emailInToken = getEmailFromToken(token);
+        return (emailInToken.equals(userEmail) && !isTokenExpired(token));
     }
 }

@@ -25,10 +25,7 @@ public class OpenRouterConfig {
     private String appName;
 
     @Value("${openrouter.api.model}")
-    private String modelName; // 添加这个字段
-
-    @Value("${openrouter.system-prompt}")
-    private String systemPrompt;
+    private String modelName;
 
     @Bean
     public RestTemplate openRouterRestTemplate() {

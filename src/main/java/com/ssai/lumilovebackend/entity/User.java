@@ -32,7 +32,7 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(length = 1000)
+    @Column(columnDefinition = "TEXT")
     private String avatar;
 
     @PrePersist
